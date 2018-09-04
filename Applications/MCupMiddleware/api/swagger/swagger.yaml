@@ -1,0 +1,1707 @@
+swagger: "2.0"
+info:
+  description: "Mediation Layer e-CUPT"
+  version: "1.0.0"
+  title: e-CUPTapi
+  license:
+    name: AK12srl
+# during dev, should point to your local machine
+host: localhost:3000
+# basePath prefixes all resource paths 
+basePath: /
+# 
+tags:
+- name : "auth"
+  description: Accesso ai servizi utente
+- name : "controlloPrestazioni"
+  description: Controllo delle prestazioni su una singola struttura
+- name: "terminiservizio"
+  description: Servizi di gestione dei termini di servizio del sistema informatico
+- name: "impegnativa"
+  description: Servizi per le operazioni riguardanti l'impegnativa
+- name: "reparti"
+  description: Servizi per gestire i reparti delle strutture
+- name: "prima disponibilita"
+  description: Servizi per gestire le disponibilità della struttura
+- name: "comuni e province"
+  description: Servizi per filtrare la lista di province e comuni
+- name: "stato civile"
+  description: Servizio per elencare gli stati civili
+- name: "gestione REST e-CUPT"
+  description: Servizi per la gestione delle REST per l'applicazione e-CUPT
+- name: "informazioni struttura"
+  description: Servizi per la gestione delle informazioni della struttura
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+  - text/plain
+schemes:
+  - http
+paths:
+  /auth/login:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio effettua l’autenticazione dell’utente assegnandogli il token per poter accedere all’applicazione e ai suoi servizi, inoltre controlla se l’utente ha prenotazioni in sospeso
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                example: Fabri
+              password:
+                type: string
+                example: Ventordici1
+      responses:
+        200:
+          description: login riuscita
+          schema:
+            type: object
+            properties:
+              auth:
+                type: boolean
+              token:
+                type: string
+              prenotazionePending:
+                type: boolean
+        400:
+          description: La richiesta non può essere elaborata
+          content:
+            text/plain:
+        401:
+          description: Password errata
+          content:
+            text/plain:
+        403:
+          description: Utenza scaduta
+          content:
+            text/plain:
+        404:
+          description: Utente non trovato
+          content:
+            text/plain:
+        503:
+          description: Il servizio non è momentaneamente disponibile
+          content:
+            text/plain:
+  /auth/registrazione:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio effettua la registrazione dell'utente per utilizzare i servizi
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+              nome:
+                type: string
+              cognome:
+                type: string
+              codice_fiscale:
+                type: string
+              data_nascita:
+                type: string
+              luogo_nascita:
+                type: string
+              provincia:
+                type: string
+              sesso:
+                type: string
+              password:
+                type: string
+              comune_residenza:
+                type: string
+              telefono:
+                type: string
+              istatComuneNascita:
+                type: string
+              istatComuneResidenza:
+                type: string
+              codStatoCivile:
+                type: string
+              statocivile:
+                type: string
+              email:
+                type: string
+              indirizzores:
+                type: string
+      responses:
+        201:
+          description: Registrazione riuscita
+          schema:
+            type: object
+            properties:
+              auth:
+                type: boolean
+              token:
+                type: string
+        400:
+          description: La richiesta non può essere eseguita
+          content:
+            text/plain:
+        409:
+          description: Utente già registrato
+          content:
+            text/plain:
+        503:
+          description: Il servizio non è momentaneamente disponibile
+          content:
+            text/plain:
+  /auth/me:
+    get:
+      tags:
+        - "auth"
+      description: Il servizio restituisce le informazioni personali dell'utente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          description: Accesso consentito
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                nome:
+                  type: string
+                cognome:
+                  type: string
+                codice_fiscale:
+                  type: string
+                data_nascita:
+                  type: string
+                istatComuneNascita:
+                  type: string
+                luogo_nascita:
+                  type: string
+                istatComuneResidenza:
+                  type: string
+                comune_residenza:
+                  type: string
+                telefono:
+                  type: string
+                codStatoCivile:
+                  type: string
+                statocivile:
+                  type: string
+                sesso:
+                  type: string
+                email:
+                  type: string
+                indirizzores: 
+                  type: string
+                nomeCompletoConCodiceFiscale:
+                  type: string
+        401:
+          description: Autenticazione fallita
+          schema:
+            type: object
+            properties:
+              auth:
+                type: boolean
+              message:
+                type: string
+        404:
+          description: Utente non trovato
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          schema:
+            type: object
+            properties:
+              auth:
+                type: boolean
+              message:
+                type: string
+        503:
+          description: Il servizio non è momentaneamente disponibile
+          content:
+            text/plain:
+  /auth/aggiungiContatto:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio permette di iniserire un nuovo nominativo nella lista contatti dell'utente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              nome:
+                  type: string
+              cognome:
+                type: string
+              codice_fiscale:
+                type: string
+              data_nascita:
+                type: string
+              istatComuneNascita:
+                type: string
+              luogo_nascita:
+                type: string
+              istatComuneResidenza:
+                type: string
+              comune_residenza:
+                type: string
+              telefono:
+                type: string
+              codStatoCivile:
+                type: string
+              statocivile:
+                type: string
+              sesso:
+                type: string
+              email:
+                type: string
+              indirizzores: 
+                type: string
+              nomeCompletoConCodiceFiscale:
+                type: string
+      responses:
+        201:
+          description: Inserimento avvenuto con successo
+          schema:
+            type: object
+            properties:
+              auth:
+                type: boolean
+        401:
+          description: Il token è errato
+          content:
+            text/plain:
+        404:
+          description: Utente non trovato
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Il servizio non è momentaneamente disponibile
+          content:
+            text/plain:
+  /auth/eliminaContatto:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio elimina il nominativo dalla lista dei contatti dell'utente 
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              codice_fiscale:
+                type: string
+      responses:
+        200:
+          description: Contatto eliminato
+          content:
+            text/plain:
+        400:
+          description: La richiesta non può essere elaborata
+          content:
+            text/plain:
+        401:
+          description: Autenticazione fallita
+          content:
+            text/plain:
+        404:
+          description: Not Found
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Il servizio non è momentaneamente disponibile
+          content:
+            text/plain:
+  /auth/confermaappuntamento:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio invia la conferma dell'appuntameto al sottosistema CUP
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              assistito:
+                type: object
+                properties:
+                  nome:
+                    type: string
+                  cognome:
+                    type: string
+                  codice_fiscale:
+                    type: string
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    dataAppuntamento:
+                      type: string
+                    oraAppuntamento:
+                      type: string
+                    codprest:
+                      type: string
+                    desprest:
+                      type: string
+                    nota:
+                      type: string
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          codReparto:
+                            type: string
+                          descrizione:
+                            type: string
+                          unitaOperativa:
+                            type: string
+                          nomeStruttura:
+                            type: string
+                          nomeMedico:
+                            type: string
+                          ubicazioneReparto:
+                            type: string
+                          ubicazioneUnita:
+                            type: string
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+              dataEmissioneRicetta:
+                type: string
+              codiceImpegnativa:
+                type: string
+              classePriorita:
+                type: string
+              termid:
+                type: string
+      responses:
+        201:
+          description: L'appuntamento è stato confermato dal sottosistema CUP e salvato correttamente nel DB
+          schema:
+            type: object
+            properties:
+              messaggio:
+                type: string
+              esito:
+                type: integer
+        400:
+          description: La richiesta non contiene campi sufficienti per elaborare l'operazione
+          schema:
+            type: string
+        401:
+          description: Il token non è valido quindi l'appuntamento non viene salvato nel DB ma è stato confermato dal sottosistema CUP
+          schema:
+            type: object
+            properties:
+              messaggio:
+                type: string
+              esito:
+                type: integer
+        404:
+          description: L'utene non è stato trovato, quindi, l'apputamento non è stato alvato nel DB, ma è stata inviata la conferma al sottosistema CUP
+          schema:
+            type: object
+            properties:
+              messaggio:
+                type: string
+              esito:
+                type: integer
+        500:
+          description: Errore di comunicazione col DB. L'appuntamento non viene salvato nel DB ma viene inviata la richiesta di conferma al sottosistema CUP
+          schema:
+            type: object
+            properties:
+              messaggio:
+                type: string
+              esito:
+                type: integer
+        502:
+          description: La conferma dell'appuntamento è stata rifiutata dal sottosistema CUP
+          content:
+            text/plain:
+        503:
+          description: Il DB non è pronto per la comunicazione col servizio. L'appuntamento non viene inviato al sottosistema CUP
+          content:
+            text/plain:
+  /auth/listaappuntamenti:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio restituisce la lista degli appuntamenti futuri dell'utente o del contatto
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              codice_fiscale:
+                type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    dataAppuntamento:
+                      type: string
+                    oraAppuntamento:
+                      type: string
+                    codPrestazione:
+                      type: string
+                    desprest:
+                      type: string
+                    nota:
+                      type: string
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          codReparto:
+                            type: string
+                          descrizione:
+                            type: string
+                          unitaOperativa:
+                            type: string
+                          nomeStruttura:
+                            type: string
+                          nomeMedico:
+                            type: string
+                          ubicazioneReparto:
+                            type: string
+                          ubicazioneUnita:
+                            type: string
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+              dataEmissioneRicetta:
+                type: string
+              dataPrenotazione:
+                type: string
+              codiceImpegnativa:
+                type: string
+              classePriorita:
+                type: string
+              termid:
+                type: string
+        400:
+          description: Campi non sufficienti per elaborare la richiesta
+          content:
+            text/plain:
+        401:
+          description: Il token non è valido
+          content:
+            text/plain:
+        404:
+          description: Utente non trovato
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col DB
+          content:
+            text/plain:
+  /auth/updatetokennotifiche:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio assegna il token per le notfiche all'utente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              tokenNotification:
+                type: string
+      responses:
+        200:
+          description: Il token per le notifiche è stato assegnato correttamente all'utente
+          schema:
+            type: boolean
+        401:
+          description: Il token di accesso è errato
+          schema:
+            type: boolean
+        404:
+          description: Utente non trovato
+          schema:
+            type: boolean
+        417:
+          description: Il token di accesso non è stato inviato
+          schema:
+            type: boolean
+        503:
+          description: Errore di comunicazione col DB
+          schema:
+            type: boolean
+  /auth/eliminaaccount:
+    get:
+      tags:
+        - "auth"
+      description: Il servizio elimina l'intero account dell'utente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          description: L'account è stato eliminato con successo
+          content:
+            text/plain:
+        401:
+          description: Autenticazione fallita
+          content:
+            text/plain:
+        417:
+          description: Accesso non autorizzato
+          content:
+            text/plain:
+        503:
+          description: Il servizio non è momentaneamente disponibile
+          content:
+            text/plain:
+  /auth/annullaImpegnativa:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio annulla l'impegnativa passata come parametro
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              codiceImpegnativa:
+                type: string
+      responses:
+        200:
+          description: L'impegnativa è stata annullata correttamente
+          content:
+            text/plain:
+        400:
+          description: Campi insufficienti per elaborare la richiesta
+          content:
+            text/plain:
+        401:
+          description: Il token di accesso non è valido
+          content:
+            text/plain:
+        404:
+          description: L'impegnativa non è stata trovata
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col DB
+          content:
+            text/plain:
+  /auth/pendingprenotazione:
+    get:
+      tags:
+        - "auth"
+      description: Il servizio restituisce la prenotazione sospesa dall'utente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          description: La prenotazione sospesa è stata trovata
+          schema:
+            type: object
+            properties:
+              idUser:
+                type: string
+              nre:
+                type: string
+              struttura:
+                type: string
+              orarioUltimaRichiesta:
+                type: string
+              appuntamentoConfermato:
+                type: boolean
+              dataEmissioneRicetta:
+                type: string
+              classePriorita:
+                type: string
+              termid:
+                type: string
+              assistito:
+                type: object
+                properties:
+                  nome:
+                    type: string
+                  cognome:
+                    type: string
+                  sesso:
+                    type: string
+                  codice_fiscale:
+                    type: string
+                  istatComuneNascita:
+                    type: string
+                  luogoNascita:
+                    type: string
+                  istatComuneResidenza:
+                    type: string
+                  comune_residenza:
+                    type: string
+                  telefono:
+                    type: string
+                  codStatoCivile:
+                    type: string
+                  statocivile:
+                    type: string
+                  indirizzores:
+                    type: string
+                  email:
+                    type: string
+                  nomeCompletoConCodiceFiscale:
+                    type: string
+                  data_nascita:
+                    type: string
+              prestazioni:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    codprest:
+                      type: string
+                    codregionale:
+                      type: string
+                    codnazionale:
+                      type: string
+                    desprest:
+                      type: string
+                    durata:
+                      type: string
+                    priorita:
+                      type: string
+                    quantita:
+                      type: string
+                    erogabile:
+                      type: string
+                    nota:
+                      type: string
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+        401:
+          description: Il token non è valido
+          content:
+            text/plain:
+        404:
+          description: L'utente non ha nessuna prenotazione in sospeso
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col DB
+          content:
+            text/plain:
+  /auth/annullaprenotazionesospesa:
+    get:
+      tags:
+        - "auth"
+      description: Il servizio annulla l'impegnativa sospesa dell'utente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          description: La prenotazione in sospeso è stata annullata correttamente
+          content:
+            text/plain:
+        401:
+          description: Il token non è valido
+          content:
+            text/plain:
+        404:
+          description: L'utente non ha nessuna prenotazione in sospeso
+          content:
+            text/plain:
+        417:
+          description: Il token non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col DB
+          content:
+            text/plain:
+  /auth/listaappuntamentiFuturiEPassati:
+    post:
+      tags:
+        - "auth"
+      description: Il servizio restituisce tutti gli appuntamenti dell'utente o del contatto
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              codice_fiscale:
+                type: string
+      responses:
+        200:
+          description: Restituisce la lista degli appuntamenti dell'utente o del contatto
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                assistito:
+                  type: object
+                  properties:
+                    nome:
+                      type: string
+                    cognome:
+                      type: string
+                    codice_fiscale:
+                      type: string
+                    appuntamenti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          dataAppuntamento:
+                            type: string
+                          oraAppuntamento:
+                            type: string
+                          codprest:
+                            type: string
+                          desprest:
+                            type: string
+                          nota:
+                            type: string
+                          reparti:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                codReparto:
+                                  type: string
+                                descrizione:
+                                  type: string
+                                unitaOperativa:
+                                  type: string
+                                nomeStruttura:
+                                  type: string
+                                nomeMedico:
+                                  type: string
+                                ubicazioneReparto:
+                                  type: string
+                                ubicazioneUnita:
+                                  type: string
+                                latitudine:
+                                  type: string
+                                longitudine:
+                                  type: string
+                dataEmissioneRicetta:
+                  type: string
+                codiceImpegnativa:
+                  type: string
+                classePriorita:
+                  type: string
+                termid:
+                  type: string
+        400:
+          description: Campi insufficienti per elaborare la richiesta
+          content:
+            text/plain:
+        401:
+          description: Il token di accesso non è valido
+          content:
+            text/plain:
+        404:
+          description: Utente non trovato
+          content:
+            text/plain:
+        417:
+          description: Il token di accesso non è stato inviato
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col DB
+          content:
+            text/plain:
+  /controlloPrestazioni:
+    post:
+      tags:
+        - "controlloPrestazioni"
+      description: Controlla se la struttura eroga la prestazione inviata
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              codregionale:
+                type: string
+              codnazionale:
+                type: string
+      responses:
+        200:
+          description: restituisce la prestazione indicando se questa è erogabile o meno
+          schema:
+            type: object
+            properties:
+              codnazionale:
+                type: string
+              codregionale:
+                type: string
+              codprest:
+                type: string
+              desprest:
+                type: string
+              erogabile:
+                type: boolean
+        417:
+          description: i dati inviati non sono sufficienti per poter elaborare la richiesta
+          content:
+            text/plain:
+        504:
+          description: si è verificato un errore di comunicazione tra il mediation layer e il sottosistema cup
+          content:
+            text/plain:
+  /terminiservizio:
+    get:
+      tags:
+        - "terminiservizio"
+      description: Restituisce i termini di servizio che l'utente deve accettare per poter utilizzare i servizi offerti dal sistema
+      responses:
+        200:
+          description: Restituisce i termini di servizio
+          content:
+            text/plain:
+        503:
+          description: Si è verificato un problema con il database
+          content:
+            text/plain:
+  /ricetta:
+    post:
+      tags:
+        - "impegnativa"
+      description: Restituisce i dati sensibili contenuti nell'impegnativa
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              nre:
+                type: string
+              cf:
+                type: string
+              assistito:
+                type: object
+                properties:
+                  nome:
+                    type: string
+                  cognome:
+                    type: string
+      responses:
+        200:
+          description: Oggetto contenente i dati dell'impegnativa
+          schema:
+            type: object
+            properties:
+              nre:
+                type: string
+              dataEmissioneRicetta:
+                type: string
+              classePriorita:
+                type: string
+              prestazioni:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    desprest:
+                      type: string
+                    codregionale:
+                      type: string
+                    codnazionale:
+                      type: string
+        401:
+          description: Il token è errato
+          content:
+            text/plain:
+        404:
+          description: La struttura non è stata trovata
+          content:
+            text/plain:
+        500:
+          description: Errore di comunicazione col database
+          content:
+            text/plain:
+  /ricercareparti:
+    post:
+      tags:
+        - "reparti"
+      description: Effettua la ricerca dei reparti che erogano la prestazione inviata
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              codprest:
+                type: string
+              codnazionale:
+                type: string
+              codregionale:
+                type: string
+      responses:
+        200:
+          description: Restituisce i reparti che erogano la prestazione
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                unitaOperativa:
+                  type: string
+                codReparto:
+                  type: string
+                descrizione:
+                  type: string
+                nomeStruttura:
+                  type: string
+                dataDisponibile:
+                  type: string
+                codprest:
+                  type: string
+                latitudine:
+                  type: string
+                longitudine:
+                  type: string
+        400:
+          description: I dati nel body non sono sufficienti per effettuare l'elaborazione richiesta
+          content:
+            text/plain:
+        401:
+          description: Il token è errato
+          content:
+            text/plain:
+        417:
+          description: I dati dell'header non sono sufficienti per effettuare l'elaborazione richiesta
+          content:
+            text/plain:
+        504:
+          description: Errore di comunicazione con il sottosistema cup
+          content:
+            text/plain:
+  /ricercaprimadisponibilita:
+    post:
+      tags:
+        - "prima disponibilita"
+      description: Ricerca la prima disponibilita verso una struttura per ogni prestazione ricevuta iniziando dalla data corrente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                codprest:
+                  type: string
+                reparti:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      unitaOperativa:
+                        type: string
+                      codReparto:
+                        type: string
+      responses:
+        200:
+          description: Restituisce le prime disponibilità
+          schema:
+            type: object
+            properties:
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    codprest:
+                      type: string
+                    desprest:
+                      type: string
+                    durata:
+                      type: string
+                    dataAppuntamento:
+                      type: string
+                    oraAppuntamento:
+                      type: string
+                    posizione:
+                      type: string
+                    nota:
+                      type: string
+                    disponibile:
+                      type: boolean
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          codReparto:
+                            type: string
+                          unitaOperativa:
+                            type: string
+                          descrizione:
+                            type: string
+                          orarioApertura:
+                            type: string
+                          orarioChiusura:
+                            type: string
+                          nomeStruttura:
+                            type: string
+                          nomeMedico:
+                            type: string
+                          ubicazioneReparto:
+                            type: string
+                          ubicazioneUnita:
+                            type: string
+                          repartoScelto:
+                            type: boolean
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+              termid:
+                type: string
+        401:
+          description: Accesso negato
+          content:
+            text/plain:
+        417:
+          description: La richiesta non può essere elaborata per omissione di dati
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione con il database
+          content:
+            text/plain:
+        504:
+          description: Errore di comunicazione con il sottosistema cup
+          content:
+            text/plain:
+  /ricercaprimadisponibilita/ricercaorario:
+    post:
+      tags:
+        - "prima disponibilita"
+      description: Ricerca la prima disponibilita verso una struttura per ogni prestazione ricevuta iniziando dall'ultima disponibilità utilizzata precedentemente
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    codprest:
+                      type: string
+                    dataAppuntamento:
+                      type: string
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          unitaOperativa:
+                            type: string
+                          codReparto:
+                            type: string
+                          repartoScelto:
+                            type: boolean
+                          nomeStruttura:
+                            type: string
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+      responses:
+        200:
+          description: Restituisce le disponibilità
+          schema:
+            type: object
+            properties:
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    codprest:
+                      type: string
+                    desprest:
+                      type: string
+                    durata:
+                      type: string
+                    dataAppuntamento:
+                      type: string
+                    oraAppuntamento:
+                      type: string
+                    posizione:
+                      type: string
+                    nota:
+                      type: string
+                    disponibile:
+                      type: boolean
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          codReparto:
+                            type: string
+                          unitaOperativa:
+                            type: string
+                          descrizione:
+                            type: string
+                          orarioApertura:
+                            type: string
+                          orarioChiusura:
+                            type: string
+                          nomeStruttura:
+                            type: string
+                          nomeMedico:
+                            type: string
+                          ubicazioneReparto:
+                            type: string
+                          ubicazioneUnita:
+                            type: string
+                          repartoScelto:
+                            type: boolean
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+              termid:
+                type: string
+        400:
+          description: La richiesta non può essere elaborata per mancanza di dati
+          content:
+            text/plain:
+        401:
+          description: Accesso negato
+          content:
+            text/plain:
+        504:
+          description: Errore di comunicazione col sottosistema cup
+          content:
+            text/plain:
+  /ricercaprimadisponibilita/ricercadata:
+    post:
+      tags:
+        - "prima disponibilita"
+      description: Ricerca la prima disponibilita verso una struttura per ogni prestazione ricevuta iniziando da una data di inizio ricerca
+      parameters:
+        - name: x-access-token
+          in: header
+          required: true
+          type: string
+        - name: struttura
+          in: header
+          required: true
+          type: string
+        - name: dataricerca
+          in: header
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    codprest:
+                      type: string
+                    dataAppuntamento:
+                      type: string
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          unitaOperativa:
+                            type: string
+                          codReparto:
+                            type: string
+                          repartoScelto:
+                            type: boolean
+                          nomeStruttura:
+                            type: string
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+      responses:
+        200:
+          description: Restituisce le disponibilità
+          schema:
+            type: object
+            properties:
+              appuntamenti:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    codprest:
+                      type: string
+                    desprest:
+                      type: string
+                    durata:
+                      type: string
+                    dataAppuntamento:
+                      type: string
+                    oraAppuntamento:
+                      type: string
+                    posizione:
+                      type: string
+                    nota:
+                      type: string
+                    disponibile:
+                      type: boolean
+                    reparti:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          codReparto:
+                            type: string
+                          unitaOperativa:
+                            type: string
+                          descrizione:
+                            type: string
+                          orarioApertura:
+                            type: string
+                          orarioChiusura:
+                            type: string
+                          nomeStruttura:
+                            type: string
+                          nomeMedico:
+                            type: string
+                          ubicazioneReparto:
+                            type: string
+                          ubicazioneUnita:
+                            type: string
+                          repartoScelto:
+                            type: boolean
+                          latitudine:
+                            type: string
+                          longitudine:
+                            type: string
+              termid:
+                type: string
+        400:
+          description: La richiesta non può essere elaborata per mancanza di dati
+          content:
+            text/plain:
+        401:
+          description: Accesso negato
+          content:
+            text/plain:
+        504:
+          description: Errore di comunicazione col sottosistema cup
+          content:
+            text/plain:
+  /comuni/listaprovince:
+    get:
+      tags:
+        - "comuni e province"
+      description: Restituisce l'elenco delle province
+      responses:
+        200:
+          description: l'elenco contiene il nome della provincia e il codice istat
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                provincia:
+                  type: string
+                codIstat:
+                  type: string
+        504:
+          description: Errore di comunicazione con il servizio
+          content:
+            text/plain:
+  /comuni/listacomuni:
+    post:
+      tags:
+        - "comuni e province"
+      description: Restituisce l'elenco dei comuni
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              codIstat:
+                type: string
+      responses:
+        200:
+          description: l'elenco contiene il nome e il codice istat
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                nome:
+                  type: string
+                codice:
+                  type: string
+        504:
+          description: Errore di comunicazione con il servizio
+          content:
+            text/plain:
+  /statocivile:
+    get:
+      tags:
+        - "stato civile"
+      description: Restituisce gli stati civili
+      responses:
+        200:
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                descrizione:
+                  type: string
+        503:
+          description: Errore di comunicazione col database
+          content:
+            text/plain:
+  /urlserviziapp:
+    post:
+      tags:
+        - "gestione REST e-CUPT"
+      description: Restituisce tutte le REST per gestire l'app e-CUPT
+      parameters:
+        - name: codice_struttura
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          description: REST per la gestione dell'app
+          schema:
+            type: object
+            properties:
+              TerminiServizio:
+                type: string
+              Ricetta:
+                type: string
+              StruttureErogatrici:
+                type: string
+              Registrazione:
+                type: string
+              Login:
+                type: string
+              StrutturaPreferita:
+                type: string
+              RicercadisponibilitaReparti:
+                type: string
+              PrimaDisponibilita:
+                type: string
+              InfoPersonali:
+                type: string
+              AggiungiNuovoContatto:
+                type: string
+              EliminaContatto:
+                type: string
+              ListaComuni:
+                type: string
+              ListaProvince:
+                type: string
+              ListaStatoCivile:
+                type: string
+              ConfermaPrenotazione:
+                type: string
+              prossimaDataDisponibile:
+                type: string
+              updateTokenNotifiche:
+                type: string
+              appuntamenti:
+                type: string
+              PrimaDisponibilitaOra:
+                type: string
+              ricercadata:
+                type: string
+              eliminaContattoPersonale:
+                type: string
+              annullaImpegnativa:
+                type: string
+              ricezioneDatiPrenotazione:
+                type: string
+              annullaPrenotazioneSospesa:
+                type: string
+              spostamentoPrenotazione:
+                type: string
+              piuReparti:
+                type: string
+              appuntamentiFuturiEPassati:
+                type: string
+      404:
+        description: NOT FOUND
+        content:
+          text/plain:
+      417:
+        description: La richiesta non può essere elaborata in quanto non sono stati ricevuti dati sufficienti
+        content:
+          text/plain:
+      503:
+        description: Errore di comunicazione col database
+        content:
+          text/plain:
+  /infostruttura/logoStruttura:
+    get:
+      tags:
+        - "informazioni struttura"
+      description: Restituisce in formato base64 il logo della struttura
+      parameters:
+        - name: struttura
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          description:
+          content:
+            text/plain:
+        417:
+          description: La richiesta non può essere elaborata per dati insufficienti
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col database
+          content:
+            text/plain:
+  /infostruttura/infoChangeAppuntamento:
+    get:
+      tags:
+        - "informazioni struttura"
+      description: Restituisce un numero che indica come gestire l'operazione di spostamento
+      parameters:
+        - name: struttura
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          content:
+            text/plain:
+        404:
+          description: NOT FOUND
+          content:
+            text/plain:
+        417:
+          description: La richiesta non può essere elaborata per dati insufficienti
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col database
+          content:
+            text/plain:
+  /infostruttura/infoMoreReparti:
+    get:
+      tags:
+        - "informazioni struttura"
+      description: Restituisce un numero che indica come gestire la possibilità di scelta tra più reparti per una singola prestazione
+      parameters:
+        - name: struttura
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          content:
+            text/plain:
+        404:
+          description: NOT FOUND
+          content:
+            text/plain:
+        417:
+          description: La richiesta non può essere elaborata per dati insufficienti
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col database
+          content:
+            text/plain:
+  /infostruttura/isAsl:
+    get:
+      tags:
+        - "informazioni struttura"
+      description: Restituisce un numero che indica come gestire la prenotazione di un impegnativa
+      parameters:
+        - name: struttura
+          in: header
+          required: true
+          type: string
+      responses:
+        200:
+          content:
+            text/plain:
+        404:
+          description: NOT FOUND
+          content:
+            text/plain:
+        417:
+          description: La richiesta non può essere elaborata per dati insufficienti
+          content:
+            text/plain:
+        503:
+          description: Errore di comunicazione col database
+          content:
+            text/plain:

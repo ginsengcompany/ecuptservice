@@ -1,0 +1,30 @@
+extends layout
+
+block content
+    script(src="/javascripts/modificaPassw.js")
+    script(src="/javascripts/jquery-2.1.4.min.js")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    meta(http-equiv="Content-Type" content="text/html; charset=utf-8")
+    div(data-role="page")
+        div(data-role="header")
+            div(style="text-align: center;")
+                img(src="/images/eCUPT.png")
+        div(data-role="content")
+            div.main-agileits
+                div.form-w3-agile
+                    h2 Reimposta password
+                    form
+                        div.form-sub-w3
+                            input#passw(type='text' name='passw' placeholder="Inserisci la nuova password" required="")
+                            div.icon-w3
+                                i.fa.fa-lock(aria-hidden="true")
+                        div.form-sub-w3
+                            input#confpassw(type='text' name='confpassw' placeholder="Conferma password" required="true")
+                            div.icon-w3
+                                i.fa.fa-unlock-alt(aria-hidden="true")
+                        div.submit-w3l
+                            input(type='button' onclick="inviadati()" value="Salva nuova password")
+        div(data-role="footer")
+            div(style="text-align: center; padding: 20px;")
+                h2(style="color: white;") Powered By
+                img#logoAk12(src="/images/logoak12.png" height=100 width=300)

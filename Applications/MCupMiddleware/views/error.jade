@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  script(src="/javascripts/jquery-2.1.4.min.js")
+  meta(name="viewport" content="width=device-width, initial-scale=1")
+  meta(http-equiv="Content-Type" content="text/html; charset=utf-8")
+  div(data-role="page")
+    div(data-role="header")
+      h1= title
+    div(data-role="content")
+      div(style="text-align: center;")
+        h2(style="color: white;")= error.status
+        pre(style="color: white;") #{error.message}
+    div(data-role="footer")
+      div(style="text-align: center; padding: 20px;")
+        h2(style="color: white;") Powered By
+        img#logoAk12(src="/images/logoak12.png" height=100 width=300)
