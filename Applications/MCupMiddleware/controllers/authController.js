@@ -495,11 +495,37 @@ exports.confermaappuntamento = function (req, res) {
                 if (err || response.statusCode !== 200 || !body || body.code !== "200") {
                     return res.status(502).send("Si è verificato un errore durante la conferma dell'appuntamento");
                 }
-                sender.messaggio = "Prenotazione avvenuta con successo";
+                sender.messaggio = "Prenotazione avvenuta con successo. Riceverà una mail di riepilogo al suo indirizzo di posta elettronica.";
                 sender.esito = 1;
                 res.status(201).send(sender);
                 prenotazionitemp.remove({idUser: decoded.id}, function (err) {
 
+                });
+                //Ivia l'email di riepilogo dell'appuntamento
+                utenti.findById(decoded.id, function (err, user) {
+                    let transport = nodemailer.createTransport({
+                        service: "Gmail",
+                        auth: {
+                            user: "ecuptservice.mail@gmail.com",
+                            pass: "Sviluppoecupt!"
+                        }
+                    });
+                    let jade = require('jade');
+                    let compiledJade = jade.compileFile(path.join(process.cwd(), "Applications/MCupMiddleware/templates/", "riepilogoPrenotazione.jade"));
+                    let context = {codiceImpegnativa : req.body.codiceImpegnativa, emailAssistito: user.email, linkImage: "http://ecuptservice.ak12srl.it/images/" + structure.codice_struttura + ".png"};
+                    let html = compiledJade(context);
+                    let mailOption = {
+                        from: '"ecuptservice.mail@gmail.com" <ecuptservice.mail@gmail.com>',
+                        to: user.email,
+                        subject: "Riepilogo prenotazione per " + req.body.assistito.cognome + " " + req.body.assistito.nome,
+                        html : html,
+                    };
+                    transport.sendMail(mailOption, (err, info) => {
+                        if (err)
+                            console.log(err);
+                        else
+                            console.log(info.response);
+                    });
                 });
                 /*
                 Cerca il documento relativo all'utente attraverso il token di accesso
