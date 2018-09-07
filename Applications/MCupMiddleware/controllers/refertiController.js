@@ -149,7 +149,7 @@ exports.inviaRefertiPosta = function (req, res) {
                 email = req.body.datiEmail.email;
                 nome = req.body.datiEmail.nome;
                 cognome = req.body.datiEmail.cognome;
-                let message = "Il paziente " + cognome + " " + nome + " " + "la ha invitata a consultare il referto al seguente link: " + url;
+                let message = "Il referto del paziente " + cognome + " " + nome + " " + "è disponibile al seguente link: " + url;
                 let mailOption = {
                     from: '"ecuptservice.mail@gmail.com" <ecuptservice.mail@gmail.com>',
                     to: email,
