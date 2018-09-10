@@ -51,6 +51,8 @@ exports.registrazione = function (req, res) {
         return res.status(400).send("Compilare tutti i campi obbligatori");
     if (utenti.db._readyState !== 1) //Controlla se il database è pronto per la comunicazione
         return res.status(503).send('Il servizio non è momentaneamente disponibile');
+    if(!(req.body.username.length >= 3 && req.body.username.length <=16))
+        return res.status(400).send("L'username deve contenere dai 3 ai 16 caratteri alfanumerici.");
     //Effettua il controllo del codice fiscale in base alle info ricevute
     controlloCodiceFiscale(req.body.codice_fiscale, req.body).then(function (x) {
         if (x) { //x = true, controllo del codice fiscale andato a buon fine
