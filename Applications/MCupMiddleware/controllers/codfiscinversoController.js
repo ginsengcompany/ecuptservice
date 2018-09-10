@@ -24,10 +24,11 @@ let convertiOmocodia = function (cf) {
             omocodia[4] + omocodia[5] + omocodia[6];
         codfisc += codice_fiscale.getCheckCode(codfisc);
         let person = codice_fiscale.computeInverse(codfisc);
-        let data = new Date(person.month.toString() + '/' + person.day.toString() + '/' + person.year);
+        let data = new Date(person.year,person.month - 1,person.day);
+        let datanascita = moment(data).format("DD/MM/YYYY");
         let sendObject = {
             sesso : person.gender,
-            datanascita: moment(data).format('DD/MM/YYYY'),
+            datanascita: datanascita,
             codcatastale: codfisc[11] + codfisc[12] + codfisc[13] + codfisc[14]
         };
         resolve(sendObject);

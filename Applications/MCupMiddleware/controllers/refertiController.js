@@ -4,6 +4,7 @@ let moment = require('moment');
 let request = require('request');
 let utils = require('../utils/util');
 let nodemailer = require('nodemailer');
+let path = require('path');
 
 /**
  * La funzione restituisce le informazioni (metadati, tipo file, tipo referto, id referto, ecc...) di un paziente.
@@ -136,38 +137,39 @@ exports.inviaRefertiPosta = function (req, res) {
 
     jwt.verify(token, utils.access_seed, function (err, decoded) { //Verifica e decodifica il token di accesso
         if (!err) { //Se tutto OK
-
-            // dichiaro variabile json per email destinazione e url inviati dal dispositivo mobile
-            let url = "";
-            let email = "";
-            let nome = "";
-            let cognome = "";
-            
-            if ((req.body.datiEmail.url !== null && req.body.datiEmail.url !== undefined) && (req.body.datiEmail.email !== null && req.body.datiEmail.email !== undefined)) {
-                // Prelevo le informazioni dal body
-                url = req.body.datiEmail.url;
-                email = req.body.datiEmail.email;
-                nome = req.body.datiEmail.nome;
-                cognome = req.body.datiEmail.cognome;
-                let message = "Il referto del paziente " + cognome + " " + nome + " " + "è disponibile al seguente link: " + url;
-                let mailOption = {
-                    from: '"ecuptservice.mail@gmail.com" <ecuptservice.mail@gmail.com>',
-                    to: email,
-                    subject: "Inoltro Referto del paziente: " + cognome + " " + nome,
-                    text: message
-                };
-                transport.sendMail(mailOption, (err, info) => {
-                    if (err) {
-                        console.log(err);
-                        return res.status(400).send("Errore nell'invio della email!.");
-                    }
-                    else {
-                        console.log(info.response);
-                        return res.status(200).send("Email inviata con successo!");
-                    }
-                });
-            } else
-                return res.status(401).send("Dati mancanti");
+            struttura.findOne({codice_struttura: req.headers.struttura}, function (err, structure) {
+                if (err) return res.status(503).send("Il servizio non è momentaneamente disponibile");
+                if (!structure) return res.status(404).send("Struttura non trovata");
+                // dichiaro variabile json per email destinazione e url inviati dal dispositivo mobile
+                let url = "";
+                let email = "";
+                let nome = "";
+                let cognome = "";
+                if ((req.body.datiEmail.url !== null && req.body.datiEmail.url !== undefined) && (req.body.datiEmail.email !== null && req.body.datiEmail.email !== undefined)) {
+                    // Prelevo le informazioni dal body
+                    url = req.body.datiEmail.url;
+                    email = req.body.datiEmail.email;
+                    nome = req.body.datiEmail.nome;
+                    cognome = req.body.datiEmail.cognome;
+                    let jade = require('jade');
+                    let compiledJade = jade.compileFile(path.join(process.cwd(), "Applications/MCupMiddleware/templates/", "refertoMail.jade"));
+                    let context = {nome : nome, cognome: cognome, linkReferto: url, linkImage: "http://ecuptservice.ak12srl.it/images/" + structure.codice_struttura + ".png", emailAssistito: email};
+                    let html = compiledJade(context);
+                    let mailOption = {
+                        from: '"ecuptservice.mail@gmail.com" <ecuptservice.mail@gmail.com>',
+                        to: email,
+                        subject: "Inoltro Referto del paziente: " + cognome + " " + nome,
+                        html: html
+                    };
+                    transport.sendMail(mailOption, (err, info) => {
+                        if (err)
+                            return res.status(400).send("Errore nell'invio della email!.");
+                        else
+                            return res.status(200).send("Email inviata con successo!");
+                    });
+                } else
+                    return res.status(401).send("Dati mancanti");
+            });
         }
         else
             return res.status(401).send("Autenticazione fallita");
