@@ -1439,11 +1439,15 @@ exports.downloadme = function (req, res) {
                         pass: "Sviluppoecupt!"
                     }
                 });
+                let jade = require('jade');
+                let compiledJade = jade.compileFile(path.join(process.cwd(), "Applications/MCupMiddleware/templates/", "dataDownload.jade"));
+                let context = {nome : user.nome, cognome: user.cognome, linkImage: "http://ecuptservice.ak12srl.it/images/eCUPT.png", emailAssistito: user.email};
+                let html = compiledJade(context);
                 let mailOption = {
                     from: '"ecuptservice.mail@gmail.com" <ecuptservice.mail@gmail.com>',
                     to: user.email,
                     subject: "Richiesta informazioni personali",
-                    text: "Gentile utente in allegato trova le sue informazioni personali utilizzate dai nostri servizi.",
+                    html: html,
                     attachments: [
                         {path : path.join(process.cwd(),'Applications/MCupMiddleware/jsonUsers') + "/" + user.nome + "-" + user.cognome + "-" + decoded.id.substr(2) + ".json"}
                     ]
