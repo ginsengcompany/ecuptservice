@@ -1262,6 +1262,7 @@ exports.richiestaPasswordSmarrita = function (req, res) {
     utenti.findOne({email: req.body.email}, {password: 0}, function (err, user) {
         if (err) return res.status(503).send("Errore nella ricerca utente");
         if (!user) return res.status(404).send("Utente non trovato");
+        if(!user.attivo) return res.status(417).send("Utenza scaduta o non attiva");
         let token = jwt.sign({id: user._id}, utils.access_seed, { //Crea il token di accesso ai servizi
             expiresIn: 86400 // expires in 24 hours
         });
@@ -1301,7 +1302,31 @@ exports.renderModPassw = function (req, res) {
                 stack: "Si sta tentando di accedere in un area privata senza privilegi di accesso"
             }, message: "Accesso non autorizzato"
         });
-        res.render('modificapass', {title: "e-CUPT"});
+        utenti.findById(decoded.id,function (err, user) {
+            if(err) return res.render('error', {
+                error: {
+                    status: 500,
+                    stack: "Servizio non disponibile"
+                },
+                message: "Il servizio non è al momento disponibile. Si prega di riprovare più tardi"
+            });
+            if(!user) return res.render('error', {
+                error: {
+                    status: 404,
+                    stack: "NOT FOUND"
+                },
+                message: "Utente inesistente."
+            });
+            if(!user.attivo)
+                return res.render('error', {
+                    error: {
+                        status: 400,
+                        stack: "Attivazione Account"
+                    },
+                    message: "Utenza scaduta o non attiva."
+                });
+            res.render('modificapass', {title: "e-CUPT"});
+        });
     });
 };
 
