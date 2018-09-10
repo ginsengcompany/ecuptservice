@@ -86,25 +86,92 @@ exports.registrazione = function (req, res) {
                             email: req.body.email,
                             provincia: req.body.provincia,
                             indirizzores: req.body.indirizzores,
-                            attivo: true,
+                            attivo: false,
                             ultimoAccesso: oggiReg,
                             dataRegistrazione: oggiReg,
                             password: hashedPassword
                         },
                         function (err, user) { //Callback create
                             if (err) return res.status(503).send("Il servizio non è momentaneamente disponibile"); //Errore
-                            /*
-                            Crea il token di accesso riferito all'id del documento dell'utente e lo invia al richiedente
-                             */
-                            let token = jwt.sign({id: user._id}, utils.access_seed, {
-                                //expiresIn: 86400 // scade in 24 ore
-                            });
                             res.status(201).send({auth: true});
+                            let token = jwt.sign({id: user._id}, utils.access_seed, {
+                                expiresIn: 86400 // scade in 24 ore
+                            });
+                            let transporter = nodemailer.createTransport({
+                                service: "Gmail",
+                                auth: {
+                                    user: "ecuptservice.mail@gmail.com",
+                                    pass: "Sviluppoecupt!"
+                                }
+                            });
+                            let jade = require('jade');
+                            let compiledJade = jade.compileFile(path.join(process.cwd(), "Applications/MCupMiddleware/templates/", "activationUser.jade"));
+                            let context = {nome : req.body.nome, cognome: req.body.cognome, linkActivation: "http://192.168.125.24:3001/auth/attivaUtente?user=" + token,linkImage: "http://ecuptservice.ak12srl.it/images/eCUPT.png", emailAssistito: req.body.email};
+                            let html = compiledJade(context);
+                            let mailOption = {
+                                from: '"ecuptservice.mail@gmail.com" <ecuptservice.mail@gmail.com>',
+                                to: user.email,
+                                subject: "Attivazione Account",
+                                html: html,
+                            };
+                            transporter.sendMail(mailOption, function (err,info){
+                                if (err)
+                                    throw err;
+                            });
                         });
                 });
         }
         else //Codice fiscale non valido
             res.status(400).send("Dati inconsistenti, ricontrollare i dati");
+    });
+};
+
+exports.activationUser = function (req, res, next) {
+    if (!req.query || !req.query.user)
+        return res.render('error', {
+            error: {
+                status: 417,
+                stack: "Si sta tentando di accedere in un area privata senza privilegi di accesso"
+            },
+            message: "Accesso non autorizzato"
+        });
+    jwt.verify(req.query.user, utils.access_seed, function (err, decoded) {
+        if (err) return res.render('error', {
+            error: {
+                status: 417,
+                stack: "Si sta tentando di accedere in un area privata senza privilegi di accesso"
+            },
+            message: "Accesso non autorizzato"
+        });
+        utenti.findById(decoded.id,function (err, user) {
+            if(err) return res.render('error', {
+                error: {
+                    status: 500,
+                    stack: "Servizio non disponibile"
+                },
+                message: "Il servizio non è al momento disponibile. Si prega di riprovare più tardi"
+            });
+            if(!user) return res.render('error', {
+                error: {
+                    status: 404,
+                    stack: "NOT FOUND"
+                },
+                message: "Utente inesistente."
+            });
+            if(user.attivo)
+                return res.render('error', {
+                    error: {
+                        status: 400,
+                        stack: "Attivazione Account"
+                    },
+                    message: "L'utente risulta già attivo."
+                });
+            user.attivo = true;
+            user.save(function (err, updateUser) {
+                if (err) return res.status(500).send("Il servizio non è momentaneamente disponibile");
+                res.render('attivazioneUtenza', {title: "e-CUPT"});
+            });
+        });
     });
 };
 
@@ -302,7 +369,7 @@ exports.login = function (req, res) {
         /*
         L'utente è disattivato se non accede al servizio da più di sei mesi
          */
-        if (!user.attivo) return res.status(403).send("Utenza scaduta");
+        if (!user.attivo) return res.status(403).send("Utenza scaduta o non attiva");
         /*
         Controlla la password decodificata del documento trovato e quella inviata alla rotta
          */

@@ -111,4 +111,6 @@ router.get('/downloadMe', auth.downloadme);
 
 router.post('/checkMe', auth.checkMe);
 
+router.get('/attivaUtente', auth.activationUser);
+
 module.exports = router;
