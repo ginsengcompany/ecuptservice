@@ -418,18 +418,18 @@ exports.confermaappuntamento = function (req, res) {
     for (let i = 0; i < req.body.appuntamenti.length; i++)
         progressivi.push(i + 1); //campo che contiene il numero di prestazioni da prenotare
     jwt.verify(token, utils.access_seed, function (err, decoded) { //Verifica il token di accesso
-        if (err) return res.status(401).send(sender.messaggio = "L'appuntamento è stato confermato ma non è stato possibile salvare i dati nell'archivio dell'utente, per le informazioni dell'appuntamento contattare il servizio clienti");
+        //Template della risposta del servizio
+        let sender = {
+            messaggio: "Non è possibile confermare l'appuntamento",
+            esito: 0
+        };
+        if (err) return res.status(401).send(sender.messaggio = "Accesso non autorizzato");
         /*
     opzioni della funzione request che indicano le opzioni di invio dei dati per effettuare la prenotazione alla struttura
      */
         strutture.findOne({codice_struttura: req.headers.struttura}, function (err, structure) {
             if (err) return res.status(503).send("Il servizio non è momentaneamente disponibile");
             if (!structure) return res.status(404).send("Struttura non trovata");
-            //Template della risposta del servizio
-            let sender = {
-                messaggio: "Non è possibile confermare l'appuntamento",
-                esito: 0
-            };
             let optionsRESTuno = {
                 method: 'POST',
                 uri: structure.variabili_logicaDati.host + req.headers.struttura + '/datiimpegnativa',
@@ -564,7 +564,7 @@ exports.confermaappuntamento = function (req, res) {
                 if (err || response.statusCode !== 200 || !body || body.code !== "200") {
                     return res.status(502).send("Si è verificato un errore durante la conferma dell'appuntamento");
                 }
-                sender.messaggio = "Prenotazione avvenuta con successo. Riceverà una mail di riepilogo al suo indirizzo di posta elettronica.";
+                sender.messaggio = "Prenotazione avvenuta con successo. Riceverai una mail di riepilogo al tuo indirizzo di posta elettronica.";
                 sender.esito = 1;
                 res.status(201).send(sender);
                 prenotazionitemp.remove({idUser: decoded.id}, function (err) {
