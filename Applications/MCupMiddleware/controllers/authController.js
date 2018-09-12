@@ -564,7 +564,7 @@ exports.confermaappuntamento = function (req, res) {
                 if (err || response.statusCode !== 200 || !body || body.code !== "200") {
                     return res.status(502).send("Si è verificato un errore durante la conferma dell'appuntamento");
                 }
-                sender.messaggio = "Prenotazione avvenuta con successo. Riceverai una mail di riepilogo al tuo indirizzo di posta elettronica.";
+                sender.messaggio = "Prenotazione avvenuta con successo. Riceverai una mail di riepilogo al suo indirizzo di posta elettronica.";
                 sender.esito = 1;
                 res.status(201).send(sender);
                 prenotazionitemp.remove({idUser: decoded.id}, function (err) {
@@ -1560,6 +1560,8 @@ exports.checkMe = function (req, res) {
         return res.status(417).send("Accesso non autorizzato");
     if (utenti.db._readyState !== 1) //Controlla se il database è pronto per la comunicazione
         return res.status(503).send('Il servizio non è momentaneamente disponibile');
+    if (!req.body.hasOwnProperty('password'))
+        return res.status(417).send("Non è possibile soddisfare la richiesta");
     let token =  req.headers['x-access-token'];
     jwt.verify(token, utils.access_seed, function (err, decoded) {
         utenti.findById(decoded.id, function (err, user) {
