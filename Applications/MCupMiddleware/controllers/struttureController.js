@@ -2,6 +2,7 @@ let express = require('express');
 let bcrypt = require('bcryptjs');
 let moment = require('moment');
 let strutture = require('../models/strutture');
+let video = require('../models/video');
 let path = require('path');
 
 /*
@@ -161,10 +162,19 @@ exports.listaStrutture = function (req, res) {
 };
 
 exports.modificaStruttura = function (req, res) {
-    strutture.findOne({codice_struttura: req.body.codice_struttura}), function (err, structure) {
+    strutture.findOne({codice_struttura: req.body.codice_struttura}, function (err, structure) {
         if(err) return res.send({status: 500, message: 'Errore del Database'});
         if(!structure) return res.send({status: 404, message: 'Nessuna struttura trovata'});
 
-    }
+    });
+};
+
+exports.getVideos = function (req, res) {
+    if(!req.headers.hasOwnProperty("struttura")) return res.status(417).send("Servizio non disponibile");
+    video.findOne({struttura : req.headers.struttura}, function (err,result) {
+        if(err) return res.status(500).send("Il servizio non è momentaneamente disponibile");
+        if(!result) return res.status(404).send("Struttura non trovata");
+        res.status(200).send(result.videoApp);
+    });
 };
 

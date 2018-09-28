@@ -17,17 +17,17 @@ exports.ricetta = function (req, res) {
     //Controlla se sono presenti i campi struttura e x-access-token
     if (!req.headers.hasOwnProperty('struttura') && !req.headers.hasOwnProperty('x-access-token'))
         return res.status(404).send("Accesso negato");
-    /*let options = {
+    let options = {
         method: 'GET',
-        uri: 'https://api.myjson.com/bins/16l1as',
+        uri: 'https://api.myjson.com/bins/l5s0s',
         json: true
-    };*/
+    };
     let token = req.headers['x-access-token'];
     jwt.verify(token, utils.access_seed, function (err, decoded){ //Verifica e decodifica il token di accesso
         if (!err){ //Se tutto OK
             struttura.findOne({codice_struttura: req.headers.struttura}, function (err, structure) {
                 let sendObject;
-                let options = {
+               /* let options = {
                     method: 'POST',
                     uri: structure.variabili_logicaDati.host + req.headers.struttura + '/datiimpegnativa',
                     body: {
@@ -37,7 +37,7 @@ exports.ricetta = function (req, res) {
                         cognome : req.body.assistito.cognome
                     },
                     json : true
-                };
+                }; */
             request(options,function (err, response, body){
                 if(err) return res.status(500).send("Il servizio non è momentaneamente disponibile");
                 if (body.code !== "200" || response.statusCode !== 200)

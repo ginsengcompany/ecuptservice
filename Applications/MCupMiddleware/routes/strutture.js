@@ -38,4 +38,6 @@ router.get('/', struttureController.infoStruttura);
 
 router.get('/isAsl', struttureController.isAsl);
 
+router.get('/videos', struttureController.getVideos);
+
 module.exports = router;

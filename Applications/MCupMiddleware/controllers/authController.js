@@ -83,6 +83,7 @@ exports.registrazione = function (req, res) {
                             codStatoCivile: req.body.codStatoCivile,
                             statocivile: req.body.statocivile,
                             sesso: req.body.sesso,
+                            codIstatProvinciaResidenza: req.body.codIstatProvinciaResidenza,
                             email: req.body.email,
                             provincia: req.body.provincia,
                             indirizzores: req.body.indirizzores,
@@ -207,6 +208,7 @@ exports.me = function (req, res) {
                 telefono: user.telefono,
                 codStatoCivile: user.codStatoCivile,
                 statocivile: user.statocivile,
+                codIstatProvinciaResidenza: user.codIstatProvinciaResidenza,
                 provincia: user.provincia,
                 sesso: user.sesso,
                 email: user.email,
@@ -225,6 +227,7 @@ exports.me = function (req, res) {
                     comune_residenza: user.contatti[i].comune_residenza,
                     telefono: user.contatti[i].telefono,
                     codStatoCivile: user.contatti[i].codStatoCivile,
+                    codIstatProvinciaResidenza: user.contatti[i].codIstatProvinciaResidenza,
                     provincia: user.contatti[i].provincia,
                     statocivile: user.contatti[i].statocivile,
                     sesso: user.contatti[i].sesso,
@@ -283,6 +286,7 @@ exports.aggiungicontatto = function (req, res) {
                             istatComuneResidenza: req.body.istatComuneResidenza,
                             istatComuneNascita: req.body.istatComuneNascita,
                             indirizzores: req.body.indirizzores,
+                            codIstatProvinciaResidenza: req.body.codIstatProvinciaResidenza,
                             email: req.body.email,
                             sesso: req.body.sesso,
                             provincia: req.body.provincia,
@@ -711,6 +715,8 @@ exports.listaappuntamenti = function (req, res) {
                     json: true
                 };
                 request(options, function (err, response, body) {
+                    if(err)
+                        return res.status(500).send("Il servizio è momentaneamente non disponibile");
                     if (response.statusCode !== 200 || body.code !== "200" || body.data.appuntamenti.length === 0)
                         return res.status(parseInt(response.statusCode)).send("Non è possibile ricevere i dati");
                     let listaAppuntamenti = [];
@@ -1370,6 +1376,7 @@ exports.modificaContatto = function (req, res) {
                 user.statocivile = req.body.statocivile;
                 user.codStatoCivile = req.body.codStatoCivile;
                 user.indirizzores = req.body.indirizzores;
+                user.codIstatProvinciaResidenza = req.body.codIstatProvinciaResidenza;
                 trovato = true;
             }
             else {
@@ -1383,6 +1390,7 @@ exports.modificaContatto = function (req, res) {
                         user.contatti[i].codStatoCivile = req.body.codStatoCivile;
                         user.contatti[i].indirizzores = req.body.indirizzores;
                         user.contatti[i].provincia = req.body.provincia;
+                        user.contatti[i].codIstatProvinciaResidenza = req.body.codIstatProvinciaResidenza;
                         trovato = true;
                         break;
                     }

@@ -51,7 +51,14 @@ let struttureSchema = new mongoose.Schema({
         piuReparti : String,
         appuntamentiFuturiEPassati: String,
         comunebycodicecatastale : String,
-        annullaImpegnativaWeb : String
+        annullaImpegnativaWeb : String,
+        listaRefertiUtente : String,
+        scaricaReferto : String,
+        inviaRefertoEmail : String,
+        infoPersonaliEmail : String,
+        connessioneConfermaPass : String,
+        converticodicefiscale : String,
+        listaVideo : String
     }
 });
 mongoose.model('strutture', struttureSchema);
